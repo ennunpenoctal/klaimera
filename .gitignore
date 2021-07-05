@@ -1,0 +1,7 @@
+__pycache__/
+.mypy_cache/
+.vscode/
+
+logs/
+config.toml
+config.toml-BACKUP

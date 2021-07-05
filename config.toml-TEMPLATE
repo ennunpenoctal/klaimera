@@ -1,0 +1,85 @@
+[user]
+# token  : A Discord user token
+# notify : Enable notification using the notify_run push notification service
+# sound  : Enable audio alerts using the playsound2 PyPi package, requires an audio file
+#          where the klaimera.py file is.
+token  = ""
+notify = true
+sound  = false
+
+[commands]
+# enable       : Enable commands. If switched off, config.toml has to be manually
+#                modified to reenable commands.
+# status       : Enable 'kmra status'
+# config       : Enable 'kmra config ...'
+# dispatch     : Enable 'kmra dispatch ...'
+# notify       : Enable 'kmra notify'
+# log          : Enable 'kmra log ...'
+# emoji        : Enable emoji reactions to ensure no catchable exceptions were raised
+# emojiSuccess : Emoji for command execution success
+# emojiFailure : Emoji for command execution failure
+# emojiInvalid : Emoji for invalid command
+# warn         : Enable warning the user if the last command executed was more than a 
+#                ago, or that the last command was executed in a different channel
+# warnMessage  : Warning messages to replace the command message with, picked randomly
+enable       = true
+status       = true
+config       = true
+dispatch     = true
+notify       = true
+log          = true
+emoji        = true
+emojiSuccess = "✅"
+emojiFailure = "⚠️"
+emojiInvalid = "❓"
+warnMessage  = [
+    "wait",
+    "hold on",
+    "nvm",
+    "hm",
+]
+
+[dispatch.roll]
+# automate: Enable automatic rolling
+# command : Command to use when rolling
+auto    = true
+command = "$wa"
+
+[dispatch.claim]
+# automate  : Enable automatic claiming
+# threshold : Minimum kakera to trigger auto claim
+# delay     : Random float inbetween determines claim delay
+# emoji     : Emoji for claiming
+auto      = true
+threshold = 300
+delay     = [0, 0]
+emoji     = "🍞"
+
+[target]
+character = [
+    "Yuki Nagato"
+]
+
+series    = [
+    "Suzumiya Haruhi no Yuuutsu",
+]
+
+[server]
+# channel : Channel ID to roll into.
+channel = 999999999999999999
+
+[server.settings]
+# Use '$settings' to figure out the follwing:
+# claim       : Claim reset
+# claimReset  : Exact minute of the reset
+# claimExpire : Time before the claim reaction expires
+# claimAnchor : This value representing an hour in 24 hour format will be used to
+#               calculate the current claim window, rather than use $tu every other 
+#               hour to synchronize Klaimera and the server. This does not take into
+#               effect if the claim reset does not equate to a round hour, e.g. 192.
+# rolls       : Rolls per hour
+claim       = 180
+claimReset  = 15
+claimExpire = 30
+claimAnchor = 1
+rolls       = 10
