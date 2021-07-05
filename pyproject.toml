@@ -19,6 +19,7 @@ notify-run = "^0.0.14"
 types-aiofiles = "^0.1.5"
 "discord.py-stubs" = "^1.7.3"
 black = "^21.6b0"
+mypy = "^0.910"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
