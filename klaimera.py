@@ -24,8 +24,9 @@ class EventType(Enum):
     ROLL = 1
     RESET_CLAIM = 2
     RESET_KAKERA = 3
-    TIME_SYNC = 4
-    EVENTMGR_BENCH = 5
+    RESET_DAILY = 4
+    TIME_SYNC = 5
+    EVENTMGR_BENCH = 6
 
 
 class Event(NamedTuple):
@@ -226,7 +227,6 @@ class Klaimera(discord.Client):
                         f"config       = {self.config.commands_config}\n"
                         f"dispatch     = {self.config.commands_dispatch}\n"
                         f"notify       = {self.config.commands_notify}\n"
-                        f"log          = {self.config.commands_log}\n"
                         f"emoji        = {self.config.commands_emoji}\n"
                         f"emojiSuccess = {self.config.commands_emojiSuccess}\n"
                         f"emojiFailure = {self.config.commands_emojiFailure}\n"
@@ -289,19 +289,7 @@ class Klaimera(discord.Client):
             else:
                 return 1
 
-        elif base == "log":
-            if args and ":" in args:
-                ...
-                return 0
-
-            elif args == "save":
-                ...
-                return 0
-
-            else:
-                return 1
-
-        elif base == "status":
+        elif base == "status" and self.config.commands_statusPublic:
             kmra_start_dt = datetime.fromtimestamp(KLAIMERA_START)
             uptime = datetime.now() - kmra_start_dt
 

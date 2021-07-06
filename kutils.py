@@ -138,10 +138,12 @@ class Config:
 
         self.commands_enable = self._verify_bool(self.toml["commands"]["enable"])
         self.commands_status = self._verify_bool(self.toml["commands"]["status"])
+        self.commands_statusPublic = self._verify_bool(
+            self.toml["commands"]["statusPublic"]
+        )
         self.commands_config = self._verify_bool(self.toml["commands"]["config"])
         self.commands_dispatch = self._verify_bool(self.toml["commands"]["dispatch"])
         self.commands_notify = self._verify_bool(self.toml["commands"]["notify"])
-        self.commands_log = self._verify_bool(self.toml["commands"]["log"])
         self.commands_emoji = self._verify_bool(self.toml["commands"]["emoji"])
         self.commands_emojiSuccess = self._verify_str(
             self.toml["commands"]["emojiSuccess"]
@@ -199,7 +201,9 @@ class Config:
         self.server_settings_claimAnchor = self._verify_int(
             self.toml["server"]["settings"]["claimAnchor"]
         )
-        self.server_settings_rolls = self.toml["server"]["settings"]["rolls"]
+        self.server_settings_rolls = self._verify_int(
+            self.toml["server"]["settings"]["rolls"]
+        )
 
         if not hasattr(self, "idmap"):  # Prevent idmap recreation during reloads
             self.idmap = {
@@ -207,10 +211,10 @@ class Config:
                 "user.sound": self.user_sound,
                 "commands.enable": self.commands_enable,
                 "commands.status": self.commands_status,
+                "commands.statusPublic": self.commands_statusPublic,
                 "commands.config": self.commands_config,
                 "commands.dispatch": self.commands_dispatch,
                 "commands.notify": self.commands_notify,
-                "commands.log": self.commands_log,
                 "commands.emoji": self.commands_emoji,
                 "commands.emojiSuccess": self.commands_emojiSuccess,
                 "commands.emojiFailure": self.commands_emojiFailure,

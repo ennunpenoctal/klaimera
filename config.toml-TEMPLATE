@@ -14,7 +14,6 @@ sound  = false
 # config       : Enable 'kmra config ...'
 # dispatch     : Enable 'kmra dispatch ...'
 # notify       : Enable 'kmra notify'
-# log          : Enable 'kmra log ...'
 # emoji        : Enable emoji reactions to ensure no catchable exceptions were raised
 # emojiSuccess : Emoji for command execution success
 # emojiFailure : Emoji for command execution failure
@@ -24,10 +23,10 @@ sound  = false
 # warnMessage  : Warning messages to replace the command message with, picked randomly
 enable       = true
 status       = true
+statusPublic = false
 config       = true
 dispatch     = true
 notify       = true
-log          = true
 emoji        = true
 emojiSuccess = "✅"
 emojiFailure = "⚠️"
