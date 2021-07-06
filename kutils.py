@@ -98,7 +98,12 @@ class Config:
     def _verify_int_array(array: Any, length: Optional[int] = None) -> items.Array:
         if isinstance(array, items.Array):
             check = [isinstance(item, items.Integer) for item in array]
-            if all(check) and (length and length != len(array)):
+            # NOTE: This is required as isinstance(True, int) == True because
+            #       historical reasons
+            bool_check = [isinstance(item, bool) for item in array]
+            if (all(check) and not all(bool_check)) and (
+                (length and length == len(array)) or not length
+            ):
                 return array
 
             else:
