@@ -32,6 +32,81 @@ class Config:
     def __init__(self) -> None:
         self.path = Path(__file__).parent.joinpath("config.toml").absolute()
 
+    @staticmethod
+    def _verify_bool(item: Any) -> items.Bool:
+        if isinstance(item, items.Bool):
+            return item
+
+        else:
+            raise TypeError(
+                "Invalid configuration type. See Traceback for more details."
+            )
+
+    @staticmethod
+    def _verify_float(item: Any) -> items.Float:
+        if isinstance(item, items.Float):
+            return item
+
+        else:
+            raise TypeError(
+                "Invalid configuration type. See Traceback for more details."
+            )
+
+    @staticmethod
+    def _verify_int(item: Any) -> items.Integer:
+        if isinstance(item, items.Integer):
+            return item
+
+        else:
+            raise TypeError(
+                "Invalid configuration type. See Traceback for more details."
+            )
+
+    @staticmethod
+    def _verify_str(item: Any) -> items.String:
+        if isinstance(item, items.String):
+            return item
+
+        else:
+            raise TypeError(
+                "Invalid configuration type. See Traceback for more details."
+            )
+
+    @staticmethod
+    def _verify_str_array(array: Any, required: bool = False) -> items.Array:
+        if isinstance(array, items.Array):
+            check = [isinstance(item, items.String) for item in array]
+            if all(check) or (len(array) == 0 and required):
+                return array
+
+            else:
+                raise TypeError(
+                    "Invalid array due to type mismatch or empty array. "
+                    " See traceback for more details."
+                )
+
+        else:
+            raise TypeError(
+                "Invalid configuration type. See traceback for more details."
+            )
+
+    @staticmethod
+    def _verify_int_array(array: Any, length: Optional[int] = None) -> items.Array:
+        if isinstance(array, items.Array):
+            check = [isinstance(item, items.Integer) for item in array]
+            if all(check) and (length and length != len(array)):
+                return array
+
+            else:
+                raise TypeError(
+                    "Invalid type in array. See traceback for more details."
+                )
+
+        else:
+            raise TypeError(
+                "Invalid configuration type. See traceback for more details."
+            )
+
     async def load(self):
         if not hasattr(self, "file"):
             if not self.path.exists():
@@ -43,43 +118,73 @@ class Config:
 
         await self.file.seek(0)
 
-        self.user_token = self.toml["user"]["token"]
-        self.user_notify = self.toml["user"]["notify"]
-        self.user_sound = self.toml["user"]["sound"]
+        self.user_token = self._verify_str(self.toml["user"]["token"])
+        self.user_notify = self._verify_bool(self.toml["user"]["notify"])
+        self.user_sound = self._verify_bool(self.toml["user"]["sound"])
 
-        self.commands_enable = self.toml["commands"]["enable"]
-        self.commands_status = self.toml["commands"]["status"]
-        self.commands_config = self.toml["commands"]["config"]
-        self.commands_dispatch = self.toml["commands"]["dispatch"]
-        self.commands_notify = self.toml["commands"]["notify"]
-        self.commands_log = self.toml["commands"]["log"]
-        self.commands_emoji = self.toml["commands"]["emoji"]
-        self.commands_emojiSuccess = self.toml["commands"]["emojiSuccess"]
-        self.commands_emojiFailure = self.toml["commands"]["emojiFailure"]
-        self.commands_emojiInvalid = self.toml["commands"]["emojiInvalid"]
-        self.commands_warnMessage = self.toml["commands"]["warnMessage"]
+        self.commands_enable = self._verify_bool(self.toml["commands"]["enable"])
+        self.commands_status = self._verify_bool(self.toml["commands"]["status"])
+        self.commands_config = self._verify_bool(self.toml["commands"]["config"])
+        self.commands_dispatch = self._verify_bool(self.toml["commands"]["dispatch"])
+        self.commands_notify = self._verify_bool(self.toml["commands"]["notify"])
+        self.commands_log = self._verify_bool(self.toml["commands"]["log"])
+        self.commands_emoji = self._verify_bool(self.toml["commands"]["emoji"])
+        self.commands_emojiSuccess = self._verify_str(
+            self.toml["commands"]["emojiSuccess"]
+        )
+        self.commands_emojiFailure = self._verify_str(
+            self.toml["commands"]["emojiFailure"]
+        )
+        self.commands_emojiInvalid = self._verify_str(
+            self.toml["commands"]["emojiInvalid"]
+        )
+        self.commands_warn = self._verify_bool(self.toml["commands"]["warn"])
+        self.commands_warnMessage = self._verify_str_array(
+            self.toml["commands"]["warnMessage"],
+            required=True if self.commands_warn else False,
+        )
 
-        self.dispatch_roll_auto = self.toml["dispatch"]["roll"]["auto"]
-        self.dispatch_roll_command = self.toml["dispatch"]["roll"]["command"]
+        self.dispatch_roll_auto = self._verify_bool(
+            self.toml["dispatch"]["roll"]["auto"]
+        )
+        self.dispatch_roll_command = self._verify_str(
+            self.toml["dispatch"]["roll"]["command"]
+        )
 
-        self.dispatch_claim_auto = self.toml["dispatch"]["claim"]["auto"]
-        self.dispatch_claim_threshold = self.toml["dispatch"]["claim"]["threshold"]
-        self.dispatch_claim_delay = self.toml["dispatch"]["claim"]["delay"]
-        self.dispatch_claim_emoji = self.toml["dispatch"]["claim"]["emoji"]
+        self.dispatch_claim_auto = self._verify_bool(
+            self.toml["dispatch"]["claim"]["auto"]
+        )
+        self.dispatch_claim_threshold = self._verify_int(
+            self.toml["dispatch"]["claim"]["threshold"]
+        )
+        self.dispatch_claim_delay = self._verify_int_array(
+            self.toml["dispatch"]["claim"]["delay"], length=2
+        )
+        self.dispatch_claim_emoji = self._verify_str(
+            self.toml["dispatch"]["claim"]["emoji"]
+        )
 
-        self.target_character = self.toml["target"]["character"]
-        self.target_series = self.toml["target"]["series"]
+        self.target_character = self._verify_str_array(
+            self.toml["target"]["character"], required=True
+        )
+        self.target_series = self._verify_str_array(
+            self.toml["target"]["series"], required=True
+        )
 
-        self.server_channel = self.toml["server"]["channel"]
+        self.server_channel = self._verify_int(self.toml["server"]["channel"])
 
-        self.server_settings_claim = self.toml["server"]["settings"]["claim"]
-        self.server_settings_claimReset = self.toml["server"]["settings"]["claimReset"]
-        self.server_settings_claimExpire = self.toml["server"]["settings"][
-            "claimExpire"
-        ]
-        self.server_settings_claimAnchor = self.toml["server"]["settings"][
-            "claimAnchor"
-        ]
+        self.server_settings_claim = self._verify_int(
+            self.toml["server"]["settings"]["claim"]
+        )
+        self.server_settings_claimReset = self._verify_int(
+            self.toml["server"]["settings"]["claimReset"]
+        )
+        self.server_settings_claimExpire = self._verify_int(
+            self.toml["server"]["settings"]["claimExpire"]
+        )
+        self.server_settings_claimAnchor = self._verify_int(
+            self.toml["server"]["settings"]["claimAnchor"]
+        )
         self.server_settings_rolls = self.toml["server"]["settings"]["rolls"]
 
         if not hasattr(self, "idmap"):  # Prevent idmap recreation during reloads

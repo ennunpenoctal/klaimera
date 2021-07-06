@@ -32,6 +32,7 @@ emoji        = true
 emojiSuccess = "✅"
 emojiFailure = "⚠️"
 emojiInvalid = "❓"
+warn         = true
 warnMessage  = [
     "wait",
     "hold on",
