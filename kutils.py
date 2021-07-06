@@ -125,7 +125,9 @@ class Config:
             self.mtime = int(self.path.stat().st_mtime)
             self.toml = loads(await self.file.read())
 
-        await self.file.seek(0)
+        else:
+            await self.file.seek(0)
+            self.toml = loads(await self.file.read())
 
         # NOTE: If you see a clusterfuck of Pyright error messages, relax.
         #       https://github.com/sdispater/tomlkit/issues/111
@@ -201,7 +203,6 @@ class Config:
 
         if not hasattr(self, "idmap"):  # Prevent idmap recreation during reloads
             self.idmap = {
-                "user.token": self.user_token,
                 "user.notify": self.user_notify,
                 "user.sound": self.user_sound,
                 "commands.enable": self.commands_enable,
@@ -214,6 +215,7 @@ class Config:
                 "commands.emojiSuccess": self.commands_emojiSuccess,
                 "commands.emojiFailure": self.commands_emojiFailure,
                 "commands.emojiInvalid": self.commands_emojiInvalid,
+                "commands.warnMessage": self.commands_warnMessage,
                 "dispatch.roll.auto": self.dispatch_roll_auto,
                 "dispatch.roll.command": self.dispatch_roll_command,
                 "dispatch.claim.auto": self.dispatch_claim_auto,
@@ -222,6 +224,7 @@ class Config:
                 "dispatch.claim.emoji": self.dispatch_claim_emoji,
                 "target.character": self.target_character,
                 "target.series": self.target_series,
+                "server.channel": self.server_channel,
                 "server.settings.claim": self.server_settings_claim,
                 "server.settings.claimReset": self.server_settings_claimReset,
                 "server.settings.claimExpire": self.server_settings_claimExpire,
