@@ -23,12 +23,16 @@ Automatic claimer and roller for Mudae.
 
 ##### USE THESE IN AN ISOLATED CHANNEL!
 
-### `kmra status`
+### status
+
+**Syntax:** `kmra status`
 
 Replies with a general overview of klaimera, including _uptime_, _dispatched events_,
 _last married_.
 
-### `kmra config [ID [set VALUE|add VALUE|rem VALUE]]`
+### config
+
+**Syntax:** `kmra config [ID [set VALUE|add VALUE|rem VALUE]]`
 
 Reads and writes to the config.toml.
 
@@ -49,7 +53,9 @@ Set `user.sound` to `False`.
 - `kmra config target.character rem "Kiryu Coco"`  
 Reacts with `commands.emojiSuccess` if operation is successful.
 
-### `kmra dispatch [EVENT SECONDS]`
+### dispatch
+
+**Syntax:** `kmra dispatch [EVENT SECONDS]`
 
 Lists and reschedule dispatches.
 
@@ -66,7 +72,9 @@ Similar to the command above, but for the certain event.
 - `kmra dispatch roll 0`  
 Schedules next roll dispatch in `0` seconds. (Rolls now)
 
-### `kmra notify [push|sound]`
+### notify
+
+**Syntax:** `kmra notify [push|sound]`
 
 Tests out the push notification/sound alert feature.
 
@@ -79,7 +87,9 @@ Sends a push notification using _notify.run_.
 Plays an audio alert using _playsound2_.
 
 
-### `kmra log MESSAGE`
+### log
+
+**Syntax:** `kmra log MESSAGE`
 
 Add a message to the log.
 
