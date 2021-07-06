@@ -76,8 +76,9 @@ channel = 999999999999999999
 # claimExpire : Time before the claim reaction expires
 # claimAnchor : This value representing an hour in 24 hour format will be used to
 #               calculate the current claim window, rather than use $tu every other 
-#               hour to synchronize Klaimera and the server. This does not take into
-#               effect if the claim reset does not equate to a round hour, e.g. 192.
+#               hour to synchronize Klaimera with the server. This does not take into
+#               effect if the claim reset in hours is not a factor of 12, as factors
+#               of twelve have predictable claim reset schedules.
 # rolls       : Rolls per hour
 claim       = 180
 claimReset  = 15

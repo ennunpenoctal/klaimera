@@ -52,37 +52,37 @@ class EventManager:
             ):
                 event: Event = self.events.pop(0)
 
-                if event.recur and bench is False:
-                    next_timestamp = int(
-                        (
-                            datetime.fromtimestamp(event.timestamp) + event.delta
-                        ).timestamp()
-                    )
+                if bench is False:
+                    if event.recur:
+                        next_timestamp = int(
+                            (
+                                datetime.fromtimestamp(event.timestamp) + event.delta
+                            ).timestamp()
+                        )
 
-                    insort(
-                        self.events,
-                        Event(
-                            type=event.type,
-                            timestamp=next_timestamp,
-                            call=event.call,
-                            recur=event.recur,
-                            delta=event.delta,
-                        ),
-                    )
+                        insort(
+                            self.events,
+                            Event(
+                                type=event.type,
+                                timestamp=next_timestamp,
+                                call=event.call,
+                                recur=event.recur,
+                                delta=event.delta,
+                            ),
+                        )
 
-                    add_info = (
-                        f"recurring dispatch. ({event.delta})"
-                        f"Next call scheduled for {next_timestamp}."
-                    )
+                        add_info = (
+                            f"recurring dispatch. ({event.delta})"
+                            f"Next call scheduled for {next_timestamp}."
+                        )
 
-                else:
-                    add_info = "dispatch."
+                    else:
+                        add_info = "dispatch."
 
-                await logger.info(f"Callling scheduled {add_info}")
+                    await logger.info(f"Callling scheduled {add_info}")
 
                 loop = get_event_loop()
                 loop.create_task(event.call())
-
 
             if bench:
                 break
@@ -154,43 +154,46 @@ class Klaimera(discord.Client):
 
         if base == "config":
             # kmra config targets.character add "Yuki Nagato"
-            #      <base> <0---------------.1--.2------------
+            #      <base> <0--------------- 1-- 2------------
             if args and len(sarg := args.split(" ")) >= 1:
                 if len(sarg) == 1:
                     if sarg[0] == "reload":
                         await self.config.load()
                         await logger.info("Reloaded configuration")
-        
-                        # TODO: Verify config types so i dont get the error below, fuck you tomlkit!
-                        warn_message_str = "\n".join([f"    {mesg}" for mesg in self.config.commands_warnMessage])
 
-                        await message.reply((
-                            "```toml"
-                            "\n[user]\n"
-                            f"notify = {self.config.user_notify}\n"
-                            f"sound = {self.config.user_sound}\n"
-                            "\n[commands]\n"
-                            f"enable       = {self.config.commands_enable}\n"
-                            f"status       = {self.config.commands_status}\n"
-                            f"config       = {self.config.commands_config}\n"
-                            f"dispatch     = {self.config.commands_dispatch}\n"
-                            f"notify       = {self.config.commands_notify}\n"
-                            f"log          = {self.config.commands_log}\n"
-                            f"emoji        = {self.config.commands_emoji}\n"
-                            f"emojiSuccess = {self.config.commands_emojiSuccess}\n"
-                            f"emojiFailure = {self.config.commands_emojiFailure}\n"
-                            f"emojiInvalid = {self.config.commands_emojiInvalid}\n"
-                            f"warnMessage  = [\n"
-                            f"{warn_message_str}"
-                            "]\n"
-                            "\n[dispatch.roll]\n"
-                            "\n[dispatch.claim]\n"
-                            "\n[target]\n"
-                            "\n[server]\n"
-                            "\n[server.settings]\n"
-                            "```"
-                        ))
-                    
+                        warn_message_str = "\n".join(
+                            [f"    {mesg}" for mesg in self.config.commands_warnMessage]
+                        )
+
+                        await message.reply(
+                            (
+                                "```toml"
+                                "\n[user]\n"
+                                f"notify = {self.config.user_notify}\n"
+                                f"sound = {self.config.user_sound}\n"
+                                "\n[commands]\n"
+                                f"enable       = {self.config.commands_enable}\n"
+                                f"status       = {self.config.commands_status}\n"
+                                f"config       = {self.config.commands_config}\n"
+                                f"dispatch     = {self.config.commands_dispatch}\n"
+                                f"notify       = {self.config.commands_notify}\n"
+                                f"log          = {self.config.commands_log}\n"
+                                f"emoji        = {self.config.commands_emoji}\n"
+                                f"emojiSuccess = {self.config.commands_emojiSuccess}\n"
+                                f"emojiFailure = {self.config.commands_emojiFailure}\n"
+                                f"emojiInvalid = {self.config.commands_emojiInvalid}\n"
+                                f"warnMessage  = [\n"
+                                f"{warn_message_str}"
+                                "]\n"
+                                "\n[dispatch.roll]\n"
+                                "\n[dispatch.claim]\n"
+                                "\n[target]\n"
+                                "\n[server]\n"
+                                "\n[server.settings]\n"
+                                "```"
+                            )
+                        )
+
                     else:
                         ...
                         return 0
@@ -283,7 +286,7 @@ class Klaimera(discord.Client):
             and message.content.startswith("kmra ")
             or message.content.startswith("kmra status")
         ):
-            if (retcode := await self.command_exec(message) )== 0:
+            if (retcode := await self.command_exec(message)) == 0:
                 await message.add_reaction(str(self.config.commands_emojiSuccess))
             elif retcode == 1:
                 await message.add_reaction(str(self.config.commands_emojiInvalid))
@@ -296,7 +299,7 @@ async def main():
 
     try:
         await kmra.bootstrap()
-        await kmra.start(str(kmra.config.user_token))
+        # await kmra.start(str(kmra.config.user_token))
 
     except Exception as exc:
         logger.fatal("Error initalising the bot", exc=exc)

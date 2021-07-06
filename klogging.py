@@ -7,14 +7,13 @@ logger = logging.getLogger("klaimera")
 
 # TODO: Actually log using logger
 def log(l: str, m: str, e: Optional[Exception] = None) -> None:
-    from traceback import print_tb
-
-    ep = f" ({e.__class__.__name__}: {e})" if e else ""
-
-    print(f"[{l}] {m}" + ep)
-
+    print(f"[{l}] {m}")
     if e:
+        from traceback import print_tb
+
         print_tb(e.__traceback__)
+
+        print(f"{e.__class__.__name__}: {e}")
 
 
 @rie

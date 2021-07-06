@@ -7,6 +7,8 @@ from tomlkit import dumps, loads, items
 from tomlkit.toml_document import TOMLDocument
 from aiofiles import open
 
+# TODO: Fix config validation issues
+
 
 def rie(func: Callable) -> Callable:
     @functools.wraps(func)
@@ -33,8 +35,10 @@ class Config:
         self.path = Path(__file__).parent.joinpath("config.toml").absolute()
 
     @staticmethod
-    def _verify_bool(item: Any) -> items.Bool:
-        if isinstance(item, items.Bool):
+    def _verify_bool(item: Any) -> bool:
+        # NOTE: Unlike other TOMLDocument items, booleans are true booleans.
+        #       https://github.com/sdispater/tomlkit/issues/119
+        if isinstance(item, bool):
             return item
 
         else:
@@ -117,6 +121,9 @@ class Config:
             self.toml = loads(await self.file.read())
 
         await self.file.seek(0)
+
+        # NOTE: If you see a clusterfuck of Pyright error messages, relax.
+        #       https://github.com/sdispater/tomlkit/issues/111
 
         self.user_token = self._verify_str(self.toml["user"]["token"])
         self.user_notify = self._verify_bool(self.toml["user"]["notify"])
