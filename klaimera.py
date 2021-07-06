@@ -299,7 +299,7 @@ async def main():
 
     try:
         await kmra.bootstrap()
-        # await kmra.start(str(kmra.config.user_token))
+        await kmra.start(str(kmra.config.user_token))
 
     except Exception as exc:
         logger.fatal("Error initalising the bot", exc=exc)
