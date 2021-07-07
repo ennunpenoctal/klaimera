@@ -28,14 +28,14 @@ class Config:
     Integer = items.Integer
     Float = items.Float
     Boolean = items.Bool
-    List = items.List
+    Array = items.Array
 
     type_map = {
         str: String,
         int: Integer,
         float: Float,
         bool: Boolean,
-        list: List,
+        list: Array,
     }
 
     def __init__(self) -> None:
@@ -109,9 +109,7 @@ class Config:
     def _verify_float_array(array: Any, length: Optional[int] = None) -> items.Array:
         if isinstance(array, items.Array):
             check = [isinstance(item, items.Float) for item in array]
-            if all(check) and (
-                (length and length == len(array)) or not length
-            ):
+            if all(check) and ((length and length == len(array)) or not length):
                 return array
 
             else:

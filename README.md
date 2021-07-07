@@ -21,7 +21,7 @@ _last married_.
 
 ### config
 
-**Syntax:** `kmra config [ID [set VALUE|add VALUE|rem VALUE]]`
+**Syntax:** `kmra config [ID [set VALUE|add VALUE|rem INDEX]]`
 
 Reads and writes to the config.toml.
 
@@ -39,7 +39,7 @@ Add `"Kiryu Coco"` to an array.
 - `kmra config user.sound set False`  
 Set `user.sound` to `False`. 
 
-- `kmra config target.character rem "Kiryu Coco"`  
+- `kmra config target.character rem -1`  
 Reacts with `commands.emojiSuccess` if operation is successful.
 
 ### dispatch

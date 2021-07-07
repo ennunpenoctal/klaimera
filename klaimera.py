@@ -9,6 +9,7 @@ from time import time
 from asyncio import run, sleep, get_event_loop
 from watchgod import awatch
 from uvloop import install
+import asteval  # type: ignore
 import discord
 
 import klogging
@@ -16,6 +17,7 @@ import kutils
 
 MUDAE_AID = 432610292342587392
 KLAIMERA_START = time()
+aeval = asteval.Interpreter()
 logger = klogging
 
 
@@ -165,8 +167,10 @@ class Klaimera(discord.Client):
         if base == "config":
             # kmra config targets.character add "Yuki Nagato"
             #      <base> <0--------------- 1-- 2------------
-            if args and len(sarg := args.split(" ")) >= 1:
+            if args and len(sarg := args.split(" ", 2)) >= 1:
                 if len(sarg) == 1:
+                    # TODO: Remove this in favour of using kmra dispatch
+
                     if sarg[0] == "reload":
                         try:
                             await self.config.load()
@@ -177,26 +181,76 @@ class Klaimera(discord.Client):
                             await logger.info("Reloaded configuration")
                             return 0
 
-                    elif sarg[0] in self.config.idmap:
-                        await message.reply(f"```\n{self.config.idmap[sarg[0]]}\n```")
+                    elif (config_id := sarg[0]) in self.config.idmap:
+                        await message.reply(f"```\n{self.config.idmap[config_id]}\n```")
                         return -1
 
                     else:
                         return 1
 
-                elif len(sarg) == 3 and sarg[0] in self.config.idmap:
+                elif len(sarg) == 3 and ((config_id := sarg[0]) in self.config.idmap):
                     # TODO: Configuration write commands
-                    if sarg[1] == "set":
-                        ...
-                        return 0
+                    if write_type := sarg[1] in ["set", "add", "rem"]:
+                        try:
+                            value = aeval(sarg[2])
 
-                    elif sarg[1] == "add":
-                        ...
-                        return 0
+                        except Exception:
+                            return 1
 
-                    elif sarg[1] == "rem":
-                        ...
-                        return 0
+                        else:
+                            target = self.config.idmap[config_id]
+
+                            if write_type == "set":
+                                if isinstance(target, self.config.Array):
+                                    return 1
+
+                                elif isinstance(
+                                    target, self.config.type_map[type(value)]
+                                ):
+                                    try:
+                                        target = value
+                                        await self.config.dump()
+
+                                    except Exception:
+                                        return 2
+
+                                    else:
+                                        return 0
+
+                                else:
+                                    return 1
+
+                            elif write_type == "add":
+                                if isinstance(target, self.config.Array) and isinstance(
+                                    target[0], self.config.type_map[type(value)]
+                                ):
+                                    try:
+                                        target.append(value)
+                                        await self.config.dump()
+
+                                    except Exception:
+                                        return 2
+
+                                    else:
+                                        return 0
+
+                                else:
+                                    return 1
+
+                            elif write_type == "rem":
+                                if isinstance(value, int):
+                                    if value > len(target):
+                                        return 1
+
+                                    else:
+                                        del target[value]
+                                        return 0
+
+                                else:
+                                    return 1
+
+                            else:
+                                return 1
 
                     else:
                         return 1
@@ -294,7 +348,7 @@ class Klaimera(discord.Client):
             uptime = datetime.now() - kmra_start_dt
 
             await message.reply(
-                f"klaimera is running, and has been for `{uptime}`."
+                f"Klaimera is running, and has been for `{uptime}`."
                 f" (since `{kmra_start_dt}`)"
             )
 
@@ -351,6 +405,8 @@ class Klaimera(discord.Client):
 
 async def main():
     kmra = Klaimera()
+
+    print("Klaimera is starting...\n")
 
     try:
         await kmra.bootstrap()
