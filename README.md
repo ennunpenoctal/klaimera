@@ -4,20 +4,9 @@ Automatic claimer and roller for Mudae.
 
 ## Requirements
 
-- **Poetry**, alongside basic knowledge of the package.
+- **Poetry**
 
 - **Python 3.7**
-
-## Usage 
-
-- Duplicate `config.toml-TEMPLATE` as `config.toml`
-  - Configure as needed
-
-- Prepare the environment
-  - Use `poetry shell` to create a virtualenv
-  - Use `poetry install` to install needed dependencies
-
-- Run `klaimera.py`
 
 ## Command Usage
 
