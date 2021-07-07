@@ -7,8 +7,6 @@ from tomlkit import dumps, loads, items
 from tomlkit.toml_document import TOMLDocument
 from aiofiles import open
 
-# TODO: Fix config validation issues
-
 
 def rie(func: Callable) -> Callable:
     @functools.wraps(func)
@@ -28,8 +26,17 @@ def task(coro: Awaitable) -> asyncio.Task:
 class Config:
     String = items.String
     Integer = items.Integer
+    Float = items.Float
     Boolean = items.Bool
     List = items.List
+
+    type_map = {
+        str: String,
+        int: Integer,
+        float: Float,
+        bool: Boolean,
+        list: List,
+    }
 
     def __init__(self) -> None:
         self.path = Path(__file__).parent.joinpath("config.toml").absolute()
@@ -94,14 +101,15 @@ class Config:
                 "Invalid configuration type. See traceback for more details."
             )
 
+    # NOTE: If _verify_int_array were to be added, note that due to historical reasons,
+    #       a bool check on the array items is to be done as isinstance(True, int)
+    #       returns True
+
     @staticmethod
-    def _verify_int_array(array: Any, length: Optional[int] = None) -> items.Array:
+    def _verify_float_array(array: Any, length: Optional[int] = None) -> items.Array:
         if isinstance(array, items.Array):
-            check = [isinstance(item, items.Integer) for item in array]
-            # NOTE: This is required as isinstance(True, int) == True because
-            #       historical reasons
-            bool_check = [isinstance(item, bool) for item in array]
-            if (all(check) and not all(bool_check)) and (
+            check = [isinstance(item, items.Float) for item in array]
+            if all(check) and (
                 (length and length == len(array)) or not length
             ):
                 return array
@@ -173,7 +181,7 @@ class Config:
         self.dispatch_claim_threshold = self._verify_int(
             self.toml["dispatch"]["claim"]["threshold"]
         )
-        self.dispatch_claim_delay = self._verify_int_array(
+        self.dispatch_claim_delay = self._verify_float_array(
             self.toml["dispatch"]["claim"]["delay"], length=2
         )
         self.dispatch_claim_emoji = self._verify_str(
@@ -205,36 +213,35 @@ class Config:
             self.toml["server"]["settings"]["rolls"]
         )
 
-        if not hasattr(self, "idmap"):  # Prevent idmap recreation during reloads
-            self.idmap = {
-                "user.notify": self.user_notify,
-                "user.sound": self.user_sound,
-                "commands.enable": self.commands_enable,
-                "commands.status": self.commands_status,
-                "commands.statusPublic": self.commands_statusPublic,
-                "commands.config": self.commands_config,
-                "commands.dispatch": self.commands_dispatch,
-                "commands.notify": self.commands_notify,
-                "commands.emoji": self.commands_emoji,
-                "commands.emojiSuccess": self.commands_emojiSuccess,
-                "commands.emojiFailure": self.commands_emojiFailure,
-                "commands.emojiInvalid": self.commands_emojiInvalid,
-                "commands.warnMessage": self.commands_warnMessage,
-                "dispatch.roll.auto": self.dispatch_roll_auto,
-                "dispatch.roll.command": self.dispatch_roll_command,
-                "dispatch.claim.auto": self.dispatch_claim_auto,
-                "dispatch.claim.threshold": self.dispatch_claim_threshold,
-                "dispatch.claim.delay": self.dispatch_claim_delay,
-                "dispatch.claim.emoji": self.dispatch_claim_emoji,
-                "target.character": self.target_character,
-                "target.series": self.target_series,
-                "server.channel": self.server_channel,
-                "server.settings.claim": self.server_settings_claim,
-                "server.settings.claimReset": self.server_settings_claimReset,
-                "server.settings.claimExpire": self.server_settings_claimExpire,
-                "server.settings.claimAnchor": self.server_settings_claimAnchor,
-                "server.settings.rolls": self.server_settings_rolls,
-            }
+        self.idmap = {
+            "user.notify": self.user_notify,
+            "user.sound": self.user_sound,
+            "commands.enable": self.commands_enable,
+            "commands.status": self.commands_status,
+            "commands.statusPublic": self.commands_statusPublic,
+            "commands.config": self.commands_config,
+            "commands.dispatch": self.commands_dispatch,
+            "commands.notify": self.commands_notify,
+            "commands.emoji": self.commands_emoji,
+            "commands.emojiSuccess": self.commands_emojiSuccess,
+            "commands.emojiFailure": self.commands_emojiFailure,
+            "commands.emojiInvalid": self.commands_emojiInvalid,
+            "commands.warnMessage": self.commands_warnMessage,
+            "dispatch.roll.auto": self.dispatch_roll_auto,
+            "dispatch.roll.command": self.dispatch_roll_command,
+            "dispatch.claim.auto": self.dispatch_claim_auto,
+            "dispatch.claim.threshold": self.dispatch_claim_threshold,
+            "dispatch.claim.delay": self.dispatch_claim_delay,
+            "dispatch.claim.emoji": self.dispatch_claim_emoji,
+            "target.character": self.target_character,
+            "target.series": self.target_series,
+            "server.channel": self.server_channel,
+            "server.settings.claim": self.server_settings_claim,
+            "server.settings.claimReset": self.server_settings_claimReset,
+            "server.settings.claimExpire": self.server_settings_claimExpire,
+            "server.settings.claimAnchor": self.server_settings_claimAnchor,
+            "server.settings.rolls": self.server_settings_rolls,
+        }
 
     async def dump(self):
         await self.file.seek(0)

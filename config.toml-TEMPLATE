@@ -52,7 +52,7 @@ command = "$wa"
 # emoji     : Emoji for claiming
 auto      = true
 threshold = 300
-delay     = [0, 0]
+delay     = [0.0, 0.0]
 emoji     = "🍞"
 
 [target]
