@@ -4,9 +4,8 @@ Automatic claimer and roller for Mudae.
 
 ## Requirements
 
-- **Poetry**
-
-- **Python 3.7**
+- **Poetry** (==1.2.0a1)
+- **Python** (>3.10.0b1)
 
 ## Command Usage
 
