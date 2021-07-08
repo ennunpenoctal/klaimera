@@ -2,9 +2,8 @@ import functools
 import asyncio
 
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Optional, Union, NamedTuple
+from typing import Any, Awaitable, Callable, Optional, Union
 from tomlkit import dumps, loads, items
-from tomlkit.toml_document import TOMLDocument
 from aiofiles import open
 
 
@@ -23,12 +22,101 @@ def task(coro: Awaitable) -> asyncio.Task:
     return loop.create_task(coro)
 
 
+class Validator:
+    @staticmethod
+    def str_array(array: Any, required: bool = False) -> None:
+        if isinstance(array, items.Array):
+            check = [isinstance(item, items.String) for item in array]
+            if not (all(check) or (len(array) == 0 and required)):
+                if not all(check):
+                    fault_index = check.index(False)
+                    raise ValueError(
+                        f"Non-string at index {fault_index} ({array[fault_index]})"
+                    )
+
+                else:
+                    raise ValueError("Is required to have at least one value")
+
+        else:
+            raise TypeError("Not an array")
+
+    @staticmethod
+    def float_array(array: Any, length: Optional[int] = None) -> None:
+        if isinstance(array, items.Array):
+            check = [isinstance(item, items.Float) for item in array]
+            if not (all(check) and ((length and length == len(array)) or not length)):
+                if not all(check):
+                    fault_index = check.index(False)
+                    raise ValueError(
+                        f"Non-float at index {fault_index} ({array[fault_index]})"
+                    )
+
+                else:
+                    raise ValueError(f"Is length {len(array)}, minimum {length}")
+
+        else:
+            raise TypeError("Not an array")
+
+    @staticmethod
+    def bool(item: Any) -> None:
+        # NOTE: Unlike other TOMLDocument items, booleans are true booleans.
+        #       https://github.com/sdispater/tomlkit/issues/119
+        if not isinstance(item, bool):
+            raise TypeError("Not a bool")
+
+    @staticmethod
+    def int(item: Any) -> None:
+        if not isinstance(item, items.Integer):
+            raise TypeError("Not an integer")
+
+    @staticmethod
+    def str(item: Any) -> None:
+        if not isinstance(item, items.String):
+            raise TypeError("Not a string")
+
+
 class Config:
     String = items.String
     Integer = items.Integer
     Float = items.Float
     Boolean = items.Bool
     Array = items.Array
+
+    real_types = Union[str, int, float, bool]
+    toml_types = Union[items.String, items.Integer, items.Float, items.Bool]
+
+    ids = (
+        "user.token",
+        "user.notify",
+        "user.sound",
+        "commands.enable",
+        "commands.status",
+        "commands.statusPublic",
+        "commands.config",
+        "commands.dispatch",
+        "commands.notify",
+        "commands.emoji",
+        "commands.emojiSuccess",
+        "commands.emojiFailure",
+        "commands.emojiInvalid",
+        "commands.warn",
+        "commands.warnMessage",
+        "dispatch.roll.auto",
+        "dispatch.roll.command",
+        "dispatch.claim.auto",
+        "dispatch.claim.threshold",
+        "dispatch.claim.delay",
+        "dispatch.claim.emoji",
+        "target.roll.character",
+        "target.roll.series",
+        "target.claim.series",
+        "server.channel",
+        "server.settings.claim",
+        "server.settings.claimReset",
+        "server.settings.claimExpire",
+        "server.settings.claimAnchor",
+        "server.settings.rolls",
+    )
 
     type_map = {
         str: String,
@@ -41,205 +129,80 @@ class Config:
     def __init__(self) -> None:
         self.path = Path(__file__).parent.joinpath("config.toml").absolute()
 
-    @staticmethod
-    def _verify_bool(item: Any) -> bool:
-        # NOTE: Unlike other TOMLDocument items, booleans are true booleans.
-        #       https://github.com/sdispater/tomlkit/issues/119
-        if isinstance(item, bool):
-            return item
+    async def init(self) -> None:
+        self.file = await open(self.path, "r+")
+        self.file_mtime = int(self.path.stat().st_mtime)
+        self.toml = loads(await self.file.read())
 
+    async def get(self, id: str) -> toml_types:
+        if id in self.ids:
+            joiner = "']['"
+            return eval(f"self.toml['{joiner.join(id.split('.'))}']")
         else:
-            raise TypeError(
-                "Invalid configuration type. See Traceback for more details."
-            )
+            raise KeyError("Is a non-existent key")
 
-    @staticmethod
-    def _verify_float(item: Any) -> items.Float:
-        if isinstance(item, items.Float):
-            return item
-
+    async def set(self, id: str, value: real_types):
+        if id in self.ids:
+            joiner = "']['"
+            exec(f"self.toml[{']['.join(id.split('.'))}] = value")
         else:
-            raise TypeError(
-                "Invalid configuration type. See Traceback for more details."
-            )
-
-    @staticmethod
-    def _verify_int(item: Any) -> items.Integer:
-        if isinstance(item, items.Integer):
-            return item
-
-        else:
-            raise TypeError(
-                "Invalid configuration type. See Traceback for more details."
-            )
-
-    @staticmethod
-    def _verify_str(item: Any) -> items.String:
-        if isinstance(item, items.String):
-            return item
-
-        else:
-            raise TypeError(
-                "Invalid configuration type. See Traceback for more details."
-            )
-
-    @staticmethod
-    def _verify_str_array(array: Any, required: bool = False) -> items.Array:
-        if isinstance(array, items.Array):
-            check = [isinstance(item, items.String) for item in array]
-            if all(check) or (len(array) == 0 and required):
-                return array
-
-            else:
-                raise TypeError(
-                    "Invalid array due to type mismatch or empty array. "
-                    " See traceback for more details."
-                )
-
-        else:
-            raise TypeError(
-                "Invalid configuration type. See traceback for more details."
-            )
-
-    # NOTE: If _verify_int_array were to be added, note that due to historical reasons,
-    #       a bool check on the array items is to be done as isinstance(True, int)
-    #       returns True
-
-    @staticmethod
-    def _verify_float_array(array: Any, length: Optional[int] = None) -> items.Array:
-        if isinstance(array, items.Array):
-            check = [isinstance(item, items.Float) for item in array]
-            if all(check) and ((length and length == len(array)) or not length):
-                return array
-
-            else:
-                raise TypeError(
-                    "Invalid type in array. See traceback for more details."
-                )
-
-        else:
-            raise TypeError(
-                "Invalid configuration type. See traceback for more details."
-            )
+            raise KeyError("Is a non-existent key")
 
     async def load(self):
-        if not hasattr(self, "file"):
-            if not self.path.exists():
-                print(f"{self.path} does not exist")
-
-            self.file = await open(self.path, "r+")
-            self.mtime = int(self.path.stat().st_mtime)
-            self.toml = loads(await self.file.read())
-
-        else:
-            await self.file.seek(0)
-            self.toml = loads(await self.file.read())
-
         # NOTE: If you see a clusterfuck of Pyright error messages, relax.
         #       https://github.com/sdispater/tomlkit/issues/111
 
-        self.user_token = self._verify_str(self.toml["user"]["token"])
-        self.user_notify = self._verify_bool(self.toml["user"]["notify"])
-        self.user_sound = self._verify_bool(self.toml["user"]["sound"])
+        await self.file.seek(0)
+        self.toml = loads(await self.file.read())
 
-        self.commands_enable = self._verify_bool(self.toml["commands"]["enable"])
-        self.commands_status = self._verify_bool(self.toml["commands"]["status"])
-        self.commands_statusPublic = self._verify_bool(
-            self.toml["commands"]["statusPublic"]
-        )
-        self.commands_config = self._verify_bool(self.toml["commands"]["config"])
-        self.commands_dispatch = self._verify_bool(self.toml["commands"]["dispatch"])
-        self.commands_notify = self._verify_bool(self.toml["commands"]["notify"])
-        self.commands_emoji = self._verify_bool(self.toml["commands"]["emoji"])
-        self.commands_emojiSuccess = self._verify_str(
-            self.toml["commands"]["emojiSuccess"]
-        )
-        self.commands_emojiFailure = self._verify_str(
-            self.toml["commands"]["emojiFailure"]
-        )
-        self.commands_emojiInvalid = self._verify_str(
-            self.toml["commands"]["emojiInvalid"]
-        )
-        self.commands_warn = self._verify_bool(self.toml["commands"]["warn"])
-        self.commands_warnMessage = self._verify_str_array(
-            self.toml["commands"]["warnMessage"],
-            required=True if self.commands_warn else False,
-        )
+        async def verify(id: str, validator: Callable, **kwargs):
+            try:
+                validator(await self.get(id), **kwargs)
 
-        self.dispatch_roll_auto = self._verify_bool(
-            self.toml["dispatch"]["roll"]["auto"]
-        )
-        self.dispatch_roll_command = self._verify_str(
-            self.toml["dispatch"]["roll"]["command"]
+            except Exception as err:
+                raise err.__class__(id + f" <- {err}")
+
+        await verify("user.token", Validator.str)
+        await verify("user.notify", Validator.bool)
+        await verify("user.sound", Validator.bool)
+
+        await verify("commands.enable", Validator.bool)
+        await verify("commands.status", Validator.bool)
+        await verify("commands.statusPublic", Validator.bool)
+        await verify("commands.config", Validator.bool)
+        await verify("commands.dispatch", Validator.bool)
+        await verify("commands.notify", Validator.bool)
+        await verify("commands.emoji", Validator.bool)
+        await verify("commands.emojiSuccess", Validator.str)
+        await verify("commands.emojiFailure", Validator.str)
+        await verify("commands.emojiInvalid", Validator.str)
+        await verify("commands.emoji", Validator.bool)
+        await verify("commands.warn", Validator.bool)
+        await verify(
+            "commands.warnMessage",
+            Validator.str_array,
+            required=True if await self.get("commands.warn") else False,
         )
 
-        self.dispatch_claim_auto = self._verify_bool(
-            self.toml["dispatch"]["claim"]["auto"]
-        )
-        self.dispatch_claim_threshold = self._verify_int(
-            self.toml["dispatch"]["claim"]["threshold"]
-        )
-        self.dispatch_claim_delay = self._verify_float_array(
-            self.toml["dispatch"]["claim"]["delay"], length=2
-        )
-        self.dispatch_claim_emoji = self._verify_str(
-            self.toml["dispatch"]["claim"]["emoji"]
-        )
+        await verify("dispatch.roll.auto", Validator.bool)
+        await verify("dispatch.roll.command", Validator.str)
 
-        self.target_character = self._verify_str_array(
-            self.toml["target"]["character"], required=True
-        )
-        self.target_series = self._verify_str_array(
-            self.toml["target"]["series"], required=True
-        )
+        await verify("dispatch.claim.auto", Validator.bool)
+        await verify("dispatch.claim.threshold", Validator.int)
+        await verify("dispatch.claim.delay", Validator.float_array, length=2)
+        await verify("dispatch.claim.emoji", Validator.str)
 
-        self.server_channel = self._verify_int(self.toml["server"]["channel"])
+        await verify("target.roll.character", Validator.str_array, required=True)
+        await verify("target.roll.series", Validator.str_array, required=False)
+        await verify("target.claim.series", Validator.str_array, required=False)
 
-        self.server_settings_claim = self._verify_int(
-            self.toml["server"]["settings"]["claim"]
-        )
-        self.server_settings_claimReset = self._verify_int(
-            self.toml["server"]["settings"]["claimReset"]
-        )
-        self.server_settings_claimExpire = self._verify_int(
-            self.toml["server"]["settings"]["claimExpire"]
-        )
-        self.server_settings_claimAnchor = self._verify_int(
-            self.toml["server"]["settings"]["claimAnchor"]
-        )
-        self.server_settings_rolls = self._verify_int(
-            self.toml["server"]["settings"]["rolls"]
-        )
+        await verify("server.channel", Validator.int)
 
-        self.idmap = {
-            "user.notify": self.user_notify,
-            "user.sound": self.user_sound,
-            "commands.enable": self.commands_enable,
-            "commands.status": self.commands_status,
-            "commands.statusPublic": self.commands_statusPublic,
-            "commands.config": self.commands_config,
-            "commands.dispatch": self.commands_dispatch,
-            "commands.notify": self.commands_notify,
-            "commands.emoji": self.commands_emoji,
-            "commands.emojiSuccess": self.commands_emojiSuccess,
-            "commands.emojiFailure": self.commands_emojiFailure,
-            "commands.emojiInvalid": self.commands_emojiInvalid,
-            "commands.warnMessage": self.commands_warnMessage,
-            "dispatch.roll.auto": self.dispatch_roll_auto,
-            "dispatch.roll.command": self.dispatch_roll_command,
-            "dispatch.claim.auto": self.dispatch_claim_auto,
-            "dispatch.claim.threshold": self.dispatch_claim_threshold,
-            "dispatch.claim.delay": self.dispatch_claim_delay,
-            "dispatch.claim.emoji": self.dispatch_claim_emoji,
-            "target.character": self.target_character,
-            "target.series": self.target_series,
-            "server.channel": self.server_channel,
-            "server.settings.claim": self.server_settings_claim,
-            "server.settings.claimReset": self.server_settings_claimReset,
-            "server.settings.claimExpire": self.server_settings_claimExpire,
-            "server.settings.claimAnchor": self.server_settings_claimAnchor,
-            "server.settings.rolls": self.server_settings_rolls,
-        }
+        await verify("server.settings.claim", Validator.int)
+        await verify("server.settings.claimReset", Validator.int)
+        await verify("server.settings.claimExpire", Validator.int)
+        await verify("server.settings.claimAnchor", Validator.int)
+        await verify("server.settings.rolls", Validator.int)
 
     async def dump(self):
         await self.file.seek(0)

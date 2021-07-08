@@ -1,4 +1,4 @@
-from typing import Callable, NamedTuple, Awaitable, List, Union
+from typing import Callable, NamedTuple, Awaitable, List, Union, Optional
 from datetime import datetime, timedelta
 from statistics import median
 from random import uniform
@@ -148,8 +148,25 @@ class EventManager:
 
 
 class Klaimera(discord.Client):
-    async def command_dispatch(self) -> int:
-        return 0
+    async def command_config(
+        self, args: Optional[str], message: discord.Message
+    ) -> int:
+        return 2
+
+    async def command_dispatch(
+        self, args: Optional[str], message: discord.Message
+    ) -> int:
+        return 2
+
+    async def command_status(
+        self, args: Optional[str], message: discord.Message
+    ) -> int:
+        return 2
+
+    async def command_notify(
+        self, args: Optional[str], message: discord.Message
+    ) -> int:
+        return 2
 
     async def command_exec(self, message: discord.Message) -> int:
         # Return Codes:
@@ -164,199 +181,19 @@ class Klaimera(discord.Client):
             base, args = scmd
 
         if base == "config":
-            # kmra config targets.character add "Yuki Nagato"
-            #      <base> <0--------------- 1-- 2------------
-            if args and len(sarg := args.split(" ", 2)) >= 1:
-                if len(sarg) == 1:
-                    # TODO: Remove this in favour of using kmra dispatch
-
-                    if sarg[0] == "reload":
-                        try:
-                            await self.config.load()
-                        except Exception as err:
-                            await logger.warn("Error reloading configuration", err=err)
-                            return 2
-                        else:
-                            await logger.info("Reloaded configuration")
-                            return 0
-
-                    elif (config_id := sarg[0]) in self.config.idmap:
-                        await message.reply(f"```\n{self.config.idmap[config_id]}\n```")
-                        return -1
-
-                    else:
-                        return 1
-
-                elif len(sarg) == 3 and ((config_id := sarg[0]) in self.config.idmap):
-                    # TODO: Configuration write commands
-                    if write_type := sarg[1] in ["set", "add", "rem"]:
-                        try:
-                            value = aeval(sarg[2])
-
-                        except Exception:
-                            return 1
-
-                        else:
-                            target = self.config.idmap[config_id]
-
-                            if write_type == "set":
-                                if isinstance(target, self.config.Array):
-                                    return 1
-
-                                elif isinstance(
-                                    target, self.config.type_map[type(value)]
-                                ):
-                                    try:
-                                        target = value
-                                        await self.config.dump()
-
-                                    except Exception:
-                                        return 2
-
-                                    else:
-                                        return 0
-
-                                else:
-                                    return 1
-
-                            elif write_type == "add":
-                                if isinstance(target, self.config.Array) and isinstance(
-                                    target[0], self.config.type_map[type(value)]
-                                ):
-                                    try:
-                                        target.append(value)
-                                        await self.config.dump()
-
-                                    except Exception:
-                                        return 2
-
-                                    else:
-                                        return 0
-
-                                else:
-                                    return 1
-
-                            elif write_type == "rem":
-                                if isinstance(value, int):
-                                    if value > len(target):
-                                        return 1
-
-                                    else:
-                                        del target[value]
-                                        return 0
-
-                                else:
-                                    return 1
-
-                            else:
-                                return 1
-
-                    else:
-                        return 1
-
-                else:
-                    return 1
-
-            elif not args:
-                warn_message_str = "\n".join(
-                    [f"    {mesg}," for mesg in self.config.commands_warnMessage]
-                )
-                target_character_str = "\n".join(
-                    [f"    {mesg}," for mesg in self.config.target_character]
-                )
-                target_series_str = "\n".join(
-                    [f"    {mesg}," for mesg in self.config.target_series]
-                )
-
-                await message.reply(
-                    (
-                        "```"
-                        "\n[user]\n"
-                        f"notify = {self.config.user_notify}\n"
-                        f"sound  = {self.config.user_sound}\n"
-                        "\n[commands]\n"
-                        f"enable       = {self.config.commands_enable}\n"
-                        f"status       = {self.config.commands_status}\n"
-                        f"config       = {self.config.commands_config}\n"
-                        f"dispatch     = {self.config.commands_dispatch}\n"
-                        f"notify       = {self.config.commands_notify}\n"
-                        f"emoji        = {self.config.commands_emoji}\n"
-                        f"emojiSuccess = {self.config.commands_emojiSuccess}\n"
-                        f"emojiFailure = {self.config.commands_emojiFailure}\n"
-                        f"emojiInvalid = {self.config.commands_emojiInvalid}\n"
-                        "warnMessage  = [\n"
-                        f"{warn_message_str}"
-                        "\n]\n"
-                        "\n[dispatch.roll]\n"
-                        f"auto    = {self.config.dispatch_roll_auto}\n"
-                        f"command = {self.config.dispatch_roll_command}\n"
-                        "\n[dispatch.claim]\n"
-                        f"auto      = {self.config.dispatch_claim_auto}\n"
-                        f"threshold = {self.config.dispatch_claim_threshold}\n"
-                        f"delay     = {self.config.dispatch_claim_delay}\n"
-                        f"emoji     = {self.config.dispatch_claim_emoji}"
-                        "\n[target]\n"
-                        f"character = [\n"
-                        f"{target_character_str}"
-                        "\n]\n"
-                        f"series    = [\n"
-                        f"{target_series_str}"
-                        "\n]\n"
-                        "\n[server]\n"
-                        f"channel = {self.config.server_channel}\n"
-                        "\n[server.settings]\n"
-                        f"claim       = {self.config.server_settings_claim}\n"
-                        f"claimExpire = {self.config.server_settings_claimExpire}\n"
-                        f"claimReset  = {self.config.server_settings_claimReset}\n"
-                        f"claimAnchor = {self.config.server_settings_claimAnchor}\n"
-                        f"rolls       = {self.config.server_settings_rolls}\n"
-                        "```"
-                    )
-                )
-                return -1
-
-            else:
-                return 1
+            return await self.command_config(args, message)
 
         elif base == "dispatch":
-            # kmra dispatch roll 0
-            if args is None:
-                await message.reply(str(self.eventmgr.events))
-
-            elif len(sarg := args.split(" ")) == 2:
-                ...
-                return 0
-
-            else:
-                return 1
+            return await self.command_dispatch(args, message)
 
         elif base == "notify":
-            if args == "push":
-                ...
-                return 0
+            return await self.command_notify(args, message)
 
-            elif args == "sound":
-                ...
-                return 0
-
-            else:
-                return 1
-
-        elif base == "status" and self.config.commands_statusPublic:
-            kmra_start_dt = datetime.fromtimestamp(KLAIMERA_START)
-            uptime = datetime.now() - kmra_start_dt
-
-            await message.reply(
-                f"Klaimera is running, and has been for `{uptime}`."
-                f" (since `{kmra_start_dt}`)"
-            )
-
-            return -1
+        elif base == "status":
+            return await self.command_status(args, message)
 
         else:
             return 1
-
-        return 0
 
     async def bootstrap(self):
         self.eventmgr = EventManager()
@@ -367,10 +204,11 @@ class Klaimera(discord.Client):
         loop.create_task(self.eventmgr.dispatcher())
 
         self.config = kutils.Config()
+        await self.config.init()
         await self.config.load()
 
         async def reloader():
-            if self.config.mtime != self.config.last_modified():
+            if self.config.file_mtime != self.config.last_modified():
                 try:
                     await self.config.load()
 
@@ -390,16 +228,25 @@ class Klaimera(discord.Client):
 
     async def on_message(self, message: discord.Message):
         if (
-            message.author.id == self.user.id
-            and message.content.startswith("kmra ")
-            or message.content.startswith("kmra status")
+            message.author.id == self.user.id and message.content.startswith("kmra ")
+        ) or (
+            message.content == "kmra status"
+            and await self.config.get("commands.statusPublic")
         ):
-            if (retcode := await self.command_exec(message)) == 0:
-                await message.add_reaction(str(self.config.commands_emojiSuccess))
+            if retcode := await self.command_exec(message) == 0:
+                await message.add_reaction(
+                    str(await self.config.get("commands.emojiSuccess"))
+                )
+
             elif retcode == 1:
-                await message.add_reaction(str(self.config.commands_emojiInvalid))
+                await message.add_reaction(
+                    str(await self.config.get("commands.emojiSuccess"))
+                )
+
             elif retcode == 2:
-                await message.add_reaction(str(self.config.commands_emojiFailure))
+                await message.add_reaction(
+                    str(await self.config.get("commands.emojiSuccess"))
+                )
 
 
 async def main():
@@ -409,7 +256,7 @@ async def main():
 
     try:
         await kmra.bootstrap()
-        await kmra.start(str(kmra.config.user_token))
+        await kmra.start(str(await kmra.config.get("user.token")))
 
     except Exception as exc:
         logger.fatal("Error initalising the bot", exc=exc)

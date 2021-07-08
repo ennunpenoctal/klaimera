@@ -55,12 +55,19 @@ threshold = 300
 delay     = [0.0, 0.0]
 emoji     = "🍞"
 
-[target]
+[target.roll]
+# character : Immediately claim if character in array is rolled
+# series    : Immediately claim if character from a series in the array is rolled
 character = [
     "Yuki Nagato"
 ]
-
 series    = [
+    "Suzumiya Haruhi no Yuuutsu"
+]
+
+[target.claim]
+# series : Claim if a character from a series in the array has been rolled
+series = [
     "Suzumiya Haruhi no Yuuutsu",
 ]
 
