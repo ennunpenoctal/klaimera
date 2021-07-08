@@ -8,7 +8,6 @@ from time import time
 
 from asyncio import run, sleep, get_event_loop
 from watchgod import awatch
-from uvloop import install
 import asteval  # type: ignore
 import discord
 
@@ -421,5 +420,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    install()
     run(main())
