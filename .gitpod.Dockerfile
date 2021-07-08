@@ -36,7 +36,7 @@ RUN curl -fsSL https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-ins
     && pyenv global 3.10.0b3 \
     && python3 -m pip install --no-cache-dir --upgrade pip \
     && python3 -m pip install --no-cache-dir --upgrade \
-        setuptools wheel poetry \
+        setuptools wheel poetry==1.2.0a1 \
     && sudo rm -rf /tmp/*
 
 USER gitpod
