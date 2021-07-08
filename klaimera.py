@@ -1,4 +1,4 @@
-from typing import Callable, NamedTuple, Awaitable, List, Union, Optional
+from typing import Callable, NamedTuple, List, Union, Optional
 from datetime import datetime, timedelta
 from statistics import median
 from random import uniform
@@ -7,7 +7,6 @@ from enum import Enum
 from time import time
 
 from asyncio import run, sleep, get_event_loop
-from watchgod import awatch
 from uvloop import install
 import asteval  # type: ignore
 import discord
@@ -196,9 +195,22 @@ class Klaimera(discord.Client):
         else:
             return 1
 
+    async def event_reloader(self):
+        if self.config.file_mtime != self.config.last_modified():
+            try:
+                await self.config.load()
+
+            except Exception as exc:
+                await logger.warn("Unsuccessful config reload", exc=exc)
+
+    async def event_benchmark(self):
+        await self.eventmgr.benchmark()
+        await logger.info(
+            f"Benchedmarked EventManager, with {self.eventmgr.overhead} overhead"
+        )
+
     async def bootstrap(self):
         self.eventmgr = EventManager()
-
         await self.eventmgr.benchmark()
 
         loop = get_event_loop()
@@ -208,20 +220,20 @@ class Klaimera(discord.Client):
         await self.config.init()
         await self.config.load()
 
-        async def reloader():
-            if self.config.file_mtime != self.config.last_modified():
-                try:
-                    await self.config.load()
-
-                except Exception as exc:
-                    await logger.warn("Unsuccessful config reload", exc=exc)
-
         await self.eventmgr.dispatch(
             type=EventType.RELOAD,
-            call=reloader,
+            call=self.event_reloader,
             at=timedelta(hours=1),
             recur=True,
             delta=timedelta(minutes=30),
+        )
+
+        await self.eventmgr.dispatch(
+            type=EventType.EVENTMGR_BENCH,
+            call=self.event_benchmark,
+            at=timedelta(hours=1),
+            recur=True,
+            delta=timedelta(hours=1),
         )
 
     async def on_ready(self):
