@@ -5,7 +5,7 @@ description = "Automatic claimer and roller for Mudae."
 authors = ["ennunpenoctal <ennunpenoctal@protonmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10.0b3"
+python = "^3.7"
 "discord.py-self" = "^1.8.1"
 colorama = "^0.4.4"
 aiofiles = "^0.7.0"
