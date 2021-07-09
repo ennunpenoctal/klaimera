@@ -23,11 +23,12 @@ logger = klogging
 class EventType(Enum):
     RELOAD = 0
     ROLL = 1
-    RESET_CLAIM = 2
-    RESET_KAKERA = 3
-    RESET_DAILY = 4
-    TIME_SYNC = 5
-    EVENTMGR_BENCH = 6
+    RESET_CLAIM = 2.0
+    RESET_KAKERA = 2.1
+    RESET_DAILY = 2.2
+    RESET_VOTE = 2.3
+    TIME_SYNC = 3
+    EVENTMGR_BENCH = 4
 
 
 class Event(NamedTuple):
@@ -156,7 +157,28 @@ class Klaimera(discord.Client):
     async def command_dispatch(
         self, args: Optional[str], message: discord.Message
     ) -> int:
-        return 2
+        if args:
+            base, sarg = args.split(" ", 1)
+
+            return 2
+
+        else:
+            event_list = "TYPE"
+
+            for event in self.eventmgr.events:
+                detail_recur = f"is recurring every {event.delta}" if event.recur else "is non-recurring"
+                event_at = datetime.fromtimestamp(event.timestamp) 
+                event_in = event_at - datetime.now()
+                
+                event_list += (
+                    f"\n{event.type}\n"
+                    f" at {event_at}, {event_in} from now\n"
+                    f" {detail_recur}\n"
+                )
+
+            await message.reply(f"```{event_list}```")
+
+            return -1
 
     async def command_status(
         self, args: Optional[str], message: discord.Message
