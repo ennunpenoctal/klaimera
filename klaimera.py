@@ -246,19 +246,19 @@ class Klaimera(discord.Client):
             message.content == "kmra status"
             and await self.config.get("commands.statusPublic")
         ):
-            if retcode := await self.command_exec(message) == 0:
+            if (retcode := await self.command_exec(message)) == 0:
                 await message.add_reaction(
                     str(await self.config.get("commands.emojiSuccess"))
                 )
 
             elif retcode == 1:
                 await message.add_reaction(
-                    str(await self.config.get("commands.emojiSuccess"))
+                    str(await self.config.get("commands.emojiFailure"))
                 )
 
             elif retcode == 2:
                 await message.add_reaction(
-                    str(await self.config.get("commands.emojiSuccess"))
+                    str(await self.config.get("commands.emojiInvalid"))
                 )
 
 
