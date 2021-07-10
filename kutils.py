@@ -119,11 +119,11 @@ class Config:
         "dispatch.roll.auto",
         "dispatch.roll.command",
         "dispatch.claim.auto",
-        "dispatch.claim.delay",
-        "dispatch.claim.emoji",
+        "target.roll.kakera",
+        "target.roll.delay",
+        "target.roll.emoji",
         "target.roll.character",
         "target.roll.series",
-        "target.roll.kakera",
         "target.claim.series",
         "server.id",
         "server.channel",
@@ -204,12 +204,12 @@ class Config:
         await verify("dispatch.roll.command", Validator.str)
 
         await verify("dispatch.claim.auto", Validator.bool)
-        await verify("dispatch.claim.delay", Validator.float_array, length=2)
-        await verify("dispatch.claim.emoji", Validator.str)
 
+        await verify("target.roll.kakera", Validator.int)
+        await verify("target.roll.delay", Validator.float_array, length=2)
+        await verify("target.roll.emoji", Validator.str)
         await verify("target.roll.character", Validator.str_array, required=True)
         await verify("target.roll.series", Validator.str_array, required=False)
-        await verify("target.roll.kakera", Validator.int)
 
         await verify("target.claim.series", Validator.str_array, required=False)
 

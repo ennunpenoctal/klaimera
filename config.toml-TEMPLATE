@@ -47,24 +47,23 @@ command = "$wa"
 
 [dispatch.claim]
 # automate  : Enable automatic claiming
-# threshold : Minimum kakera to trigger auto claim
-# delay     : Random float inbetween determines claim delay
-# emoji     : Emoji for claiming
 auto      = true
-delay     = [0.0, 0.0]
-emoji     = "🍞"
 
 [target.roll]
+# kakera    : Immediately claim if character's kakera value is equal to or greater
+# delay     : Random float inbetween determining delay before claiming
+# emoji     : Emoji for claiming
 # character : Immediately claim if character in array is rolled
 # series    : Immediately claim if character from a series in the array is rolled
-# kakera    : Immediately claim if character's kakera value is equal to or greater
+kakera    = 300
+delay     = [0.0, 0.0]
+emoji     = "🍞"
 character = [
     "Yuki Nagato"
 ]
 series    = [
     "Suzumiya Haruhi no Yuuutsu"
 ]
-kakera    = 300
 
 [target.claim]
 # series : Claim if a character from a series in the array has been rolled
