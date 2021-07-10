@@ -281,6 +281,56 @@ class Klaimera(discord.Client):
             delta=timedelta(minutes=10),
         )
 
+    async def roll_parse(self, message: discord.Message):
+        embed: discord.Embed = message.embeds[0]
+        description: str = embed.description.splitlines()  # type: ignore
+        series = description[0]
+        kakera = 0
+
+        for line in description:
+            if "<:kakera:469835869059153940>" in line:
+                try:
+                    for sub in line.split("**"):
+                        try:
+                            kakera = int(sub)
+
+                        except Exception:
+                            pass
+
+                except Exception as exc:
+                    await logger.warn("?", exc=exc)
+
+        if (
+            embed.author.name in await self.config.get("target.roll.character")  # type: ignore
+            or series in await self.config.get("target.roll.series")  # type: ignore
+            or kakera >= await self.config.get("target.roll.kakera")  # type: ignore
+        ):
+            wait_min, wait_max = await self.config.get("target.roll.delay")  # type: ignore
+            await sleep(uniform(wait_min, wait_max))
+            await message.add_reaction("🍞")
+            await logger.info(f"Waifu/Claim - {series}: {embed.author.name} [{kakera}]")
+        
+        else:
+            await logger.info(f"Waifu/Roll - {series}: {embed.author.name} [{kakera}]")
+
+    async def parse(self, message: discord.Message):
+        if (
+            await self.config.get("dispatch.claim.auto")
+            and len(message.embeds) > 0
+            and isinstance(message.embeds[0], discord.Embed)
+            and isinstance(message.embeds[0].description, str)
+            and isinstance(message.embeds[0].author.name, str)
+            and any(
+                [
+                    "React with any emoji to claim!" in message.embeds[0].description,
+                    "Wished by" in message.content,
+                    "<:kakera:469835869059153940>"
+                    in message.embeds[0].description.splitlines()[-1],
+                ]
+            )
+        ):
+            await self.roll_parse(message)
+
     async def on_ready(self):
         await logger.info(f"Ready as {self.user}.")
 
@@ -305,6 +355,9 @@ class Klaimera(discord.Client):
                 await message.add_reaction(
                     str(await self.config.get("commands.emojiFailure"))
                 )
+
+        if message.author.id == MUDAE_AID:
+            await self.parse(message)
 
 
 async def main():
