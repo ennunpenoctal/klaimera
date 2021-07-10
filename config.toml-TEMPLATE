@@ -72,8 +72,11 @@ series = [
 ]
 
 [server]
-# channel : Channel ID to roll into.
-channel = 999999999999999999
+# id      : Guild ID. Klaimera only supports one server.
+# channel : Channel IDs to roll/claim into. If multiple given, first listed will be
+#           used for rolling.
+id      = 999999999999999999
+channel = [999999999999999999]
 
 [server.settings]
 # Use '$settings' to figure out the follwing:

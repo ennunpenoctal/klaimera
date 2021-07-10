@@ -58,6 +58,21 @@ class Validator:
             raise TypeError("Not an array")
 
     @staticmethod
+    def int_array(array: Any) -> None:
+        if isinstance(array, items.Array):
+            check = [isinstance(item, items.Integer) for item in array]
+            bool_check = [isinstance(item, bool) for item in array]
+
+            if not (all(check) and not all(bool_check)):
+                fault_index = check.index(False)
+                raise ValueError(
+                    f"Non-integer at index {fault_index} ({array[fault_index]})"
+                )
+
+        else:
+            raise TypeError("Not an array")
+
+    @staticmethod
     def bool(item: Any) -> None:
         # NOTE: Unlike other TOMLDocument items, booleans are true booleans.
         #       https://github.com/sdispater/tomlkit/issues/119
@@ -110,6 +125,7 @@ class Config:
         "target.roll.character",
         "target.roll.series",
         "target.claim.series",
+        "server.id",
         "server.channel",
         "server.settings.claim",
         "server.settings.claimReset",
@@ -196,7 +212,8 @@ class Config:
         await verify("target.roll.series", Validator.str_array, required=False)
         await verify("target.claim.series", Validator.str_array, required=False)
 
-        await verify("server.channel", Validator.int)
+        await verify("server.id", Validator.int)
+        await verify("server.channel", Validator.int_array)
 
         await verify("server.settings.claim", Validator.int)
         await verify("server.settings.claimReset", Validator.int)

@@ -21,18 +21,18 @@ logger = klogging
 
 
 class EventType(Enum):
-    RELOAD = 0
-    ROLL = 1
-    RESET_CLAIM = 2.0
-    RESET_KAKERA = 2.1
-    RESET_DAILY = 2.2
-    RESET_VOTE = 2.3
-    TIME_SYNC = 3
-    EVENTMGR_BENCH = 4
+    CONFIG_RELOAD = 100
+    RESET_CLAIM = 200
+    RESET_KAKERA = 201
+    RESET_DAILY = 202
+    RESET_VOTE = 203
+    SYNC_TIME = 300
+    EVENTMGR_BENCH = 400
+    ROLL = 500
 
 
 class Event(NamedTuple):
-    type: Union[EventType, str]
+    type: EventType
     timestamp: int
     call: Callable
     recur: bool = False
@@ -102,7 +102,12 @@ class EventManager:
         for _ in range(10):
             self.events.insert(
                 0,
-                Event(type="benchmark", timestamp=int(time()), call=empty, recur=False),
+                Event(
+                    type=EventType.EVENTMGR_BENCH,
+                    timestamp=int(time()),
+                    call=empty,
+                    recur=False,
+                ),
             )
 
             stime = time()
@@ -110,19 +115,18 @@ class EventManager:
             times.append(time() - stime)
 
         self.overhead = median(times)
-        await logger.debug(f"Dispatch benchmarked at {self.overhead}s")
 
     async def dispatch(
         self,
-        type: Union[EventType, str],
+        type: EventType,
         call: Callable,
         at: Union[timedelta, int, datetime],
         recur: bool = False,
         delta: timedelta = timedelta(),
     ) -> None:
         if isinstance(at, timedelta):
-            timestamp = int(time() + at.total_seconds())
             time_info = datetime.now() + at
+            timestamp = int(time_info.timestamp())
         elif isinstance(at, datetime):
             timestamp = int(at.timestamp())
             time_info = at
@@ -137,14 +141,15 @@ class EventManager:
 
         logger.info(f"Dispatched {type} for {time_info}{recur_info}")
 
-        self.events.append(
+        insort(
+            self.events,
             Event(
                 type=type,
                 timestamp=timestamp,
                 call=call,
                 recur=recur,
                 delta=delta,
-            )
+            ),
         )
 
 
@@ -157,21 +162,33 @@ class Klaimera(discord.Client):
     async def command_dispatch(
         self, args: Optional[str], message: discord.Message
     ) -> int:
-        if args:
-            base, sarg = args.split(" ", 1)
+        if args and len(sargs := args.split(" ", 1)) > 1:
+            base, sub = sargs
 
-            return 2
+            if base.isnumeric() and (index := int(base)) <= len(self.eventmgr.events):
+                ...
+                return 0
 
-        else:
+            elif base.upper() in [event.name for event in EventType]:
+                ...
+                return 0
+
+            else:
+                return 1
+
+        elif not args:
             event_list = "TYPE"
 
-            for event in self.eventmgr.events:
-                detail_recur = f"is recurring every {event.delta}" if event.recur else "is non-recurring"
-                event_at = datetime.fromtimestamp(event.timestamp) 
+            for evindex, event in enumerate(self.eventmgr.events):
+                if event.recur:
+                    detail_recur = f"is recurring every {event.delta}"
+                else:
+                    detail_recur = "is non-recurring"
+                event_at = datetime.fromtimestamp(event.timestamp)
                 event_in = event_at - datetime.now()
-                
+
                 event_list += (
-                    f"\n{event.type}\n"
+                    f"\n[{evindex}: {event.type.name}]\n"
                     f" at {event_at}, {event_in} from now\n"
                     f" {detail_recur}\n"
                 )
@@ -179,6 +196,9 @@ class Klaimera(discord.Client):
             await message.reply(f"```{event_list}```")
 
             return -1
+
+        else:
+            return 1
 
     async def command_status(
         self, args: Optional[str], message: discord.Message
@@ -228,12 +248,15 @@ class Klaimera(discord.Client):
     async def event_benchmark(self):
         await self.eventmgr.benchmark()
         await logger.info(
-            f"Benchedmarked EventManager, with {self.eventmgr.overhead} overhead"
+            f"Benchmarked EventManager, with an overhead of {self.eventmgr.overhead}s"
         )
 
     async def bootstrap(self):
         self.eventmgr = EventManager()
         await self.eventmgr.benchmark()
+        await logger.info(
+            f"Benchmarked EventManager, with an overhead of {self.eventmgr.overhead}s"
+        )
 
         loop = get_event_loop()
         loop.create_task(self.eventmgr.dispatcher())
@@ -243,9 +266,9 @@ class Klaimera(discord.Client):
         await self.config.load()
 
         await self.eventmgr.dispatch(
-            type=EventType.RELOAD,
+            type=EventType.CONFIG_RELOAD,
             call=self.event_reloader,
-            at=timedelta(hours=1),
+            at=timedelta(minutes=30),
             recur=True,
             delta=timedelta(minutes=30),
         )
@@ -253,9 +276,9 @@ class Klaimera(discord.Client):
         await self.eventmgr.dispatch(
             type=EventType.EVENTMGR_BENCH,
             call=self.event_benchmark,
-            at=timedelta(hours=1),
+            at=timedelta(minutes=10),
             recur=True,
-            delta=timedelta(hours=1),
+            delta=timedelta(minutes=10),
         )
 
     async def on_ready(self):
@@ -275,12 +298,12 @@ class Klaimera(discord.Client):
 
             elif retcode == 1:
                 await message.add_reaction(
-                    str(await self.config.get("commands.emojiFailure"))
+                    str(await self.config.get("commands.emojiInvalid"))
                 )
 
             elif retcode == 2:
                 await message.add_reaction(
-                    str(await self.config.get("commands.emojiInvalid"))
+                    str(await self.config.get("commands.emojiFailure"))
                 )
 
 
