@@ -40,10 +40,12 @@ warnMessage  = [
 ]
 
 [dispatch.roll]
-# automate: Enable automatic rolling
+# auto    : Enable automatic rolling
 # command : Command to use when rolling
+# delay   : Delay boundary inbetween rolls
 auto    = true
 command = "$wa"
+delay   = [0.5, 1.0]
 
 [dispatch.claim]
 # automate  : Enable automatic claiming
@@ -56,7 +58,7 @@ auto      = true
 # character : Immediately claim if character in array is rolled
 # series    : Immediately claim if character from a series in the array is rolled
 kakera    = 300
-delay     = [0.0, 0.0]
+delay     = [0.5, 1.0]
 emoji     = "🍞"
 character = [
     "Yuki Nagato"

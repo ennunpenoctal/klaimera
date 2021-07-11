@@ -118,6 +118,7 @@ class Config:
         "commands.warnMessage",
         "dispatch.roll.auto",
         "dispatch.roll.command",
+        "dispatch.roll.delay",
         "dispatch.claim.auto",
         "target.roll.kakera",
         "target.roll.delay",
@@ -202,6 +203,7 @@ class Config:
 
         await verify("dispatch.roll.auto", Validator.bool)
         await verify("dispatch.roll.command", Validator.str)
+        await verify("dispatch.roll.delay", Validator.float_array)
 
         await verify("dispatch.claim.auto", Validator.bool)
 
