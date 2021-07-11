@@ -9,11 +9,11 @@ python = "^3.7"
 "discord.py-self" = "^1.8.1"
 colorama = "^0.4.4"
 aiofiles = "^0.7.0"
-playsound2 = "^0.1"
 tomlkit = "^0.7.2"
 notify-run = "^0.0.14"
 asteval = "^0.9.25"
 uvloop = "^0.15.2"
+playsound = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 types-aiofiles = "^0.1.5"

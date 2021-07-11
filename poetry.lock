@@ -246,8 +246,8 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
-name = "playsound2"
-version = "0.1"
+name = "playsound"
+version = "1.2.2"
 description = "Pure Python, cross platform, single function module with no dependencies for playing sounds."
 category = "main"
 optional = false
@@ -384,7 +384,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "3b925b14577258c12864299a2242f10978651c39c0a0cc95c5df240658eca687"
+content-hash = "0553630b6bd049704922e69a85d719efec41039d587f5d8be3e847a44eb270ee"
 
 [metadata.files]
 aiofiles = [
@@ -560,9 +560,8 @@ pathspec = [
     {file = "pathspec-0.8.1-py2.py3-none-any.whl", hash = "sha256:aa0cb481c4041bf52ffa7b0d8fa6cd3e88a2ca4879c533c9153882ee2556790d"},
     {file = "pathspec-0.8.1.tar.gz", hash = "sha256:86379d6b86d75816baba717e64b1a3a3469deb93bb76d613c9ce79edc5cb68fd"},
 ]
-playsound2 = [
-    {file = "playsound2-0.1-py3-none-any.whl", hash = "sha256:904bd5957c731d50e07bf6746729f8810389efb0121be6228a18a45d34cd3950"},
-    {file = "playsound2-0.1.tar.gz", hash = "sha256:de52b44404f3ef9032ff3aa7bdc05143ab365e8a10526ce11ac0ec318609c954"},
+playsound = [
+    {file = "playsound-1.2.2-py2.py3-none-any.whl", hash = "sha256:1e83750a5325cbccee03d6e751ba3e78c037ac95b95a3ba1f38d0c5aca9e1a34"},
 ]
 pyqrcode = [
     {file = "PyQRCode-1.2.1.tar.gz", hash = "sha256:fdbf7634733e56b72e27f9bce46e4550b75a3a2c420414035cae9d9d26b234d5"},
