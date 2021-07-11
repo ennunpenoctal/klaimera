@@ -5,6 +5,23 @@ Automatic claimer and roller for Mudae, version `0.0.0`.
 **WARNING: The current version is primitive and is very volatile stability wise.**
 **Do not use it unless you _know_ what you are doing.**
 
+These are neccesary before Klaimera can be bumped to `0.1.0`.
+
+- [ ] Automatic Rolling
+  - [ ] Reset Tracking (`SYNC_TIME`)
+
+- [ ] Basic Commands
+  - [ ] `dispatch`
+    - [x] Listing
+    - [ ] Manipulation
+  - [ ] `config`
+    - [ ] Listing
+    - [ ] Manipulation
+
+- [x] Notifications
+  - [x] Push
+  - [x] Alert
+
 ## Requirements
 
 - Poetry
