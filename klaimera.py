@@ -337,6 +337,11 @@ class Klaimera(discord.Client):
             and isinstance(message.embeds[0], discord.Embed)
             and isinstance(message.embeds[0].description, str)
             and isinstance(message.embeds[0].author.name, str)
+            and not (
+                # TODO: Remove/rework this once kakera claim tracking is implemented
+                isinstance(footer := message.embeds[0].footer.text, str)
+                and "Belongs to" in footer
+            )
             and any(
                 [
                     "React with any emoji to claim!" in message.embeds[0].description,
