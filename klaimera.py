@@ -76,8 +76,8 @@ class EventManager:
                         )
 
                         add_info = (
-                            f"recurring dispatch. ({event.delta})"
-                            f"Next call scheduled for {next_timestamp}."
+                            f"dispatch, recurs every {event.delta} with next call "
+                            f"scheduled for {next_timestamp}."
                         )
 
                     else:
