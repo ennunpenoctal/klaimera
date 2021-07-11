@@ -363,7 +363,7 @@ class Klaimera(discord.Client):
 async def main():
     kmra = Klaimera()
 
-    print("Klaimera is starting...\n")
+    print("Klaimera v0.1.0\n")
 
     try:
         await kmra.bootstrap()
