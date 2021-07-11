@@ -177,13 +177,14 @@ class Klaimera(discord.Client):
                 return 1
 
         elif not args:
-            event_list = "TYPE"
+            event_list = ""
 
             for evindex, event in enumerate(self.eventmgr.events):
                 if event.recur:
                     detail_recur = f"is recurring every {event.delta}"
                 else:
                     detail_recur = "is non-recurring"
+
                 event_at = datetime.fromtimestamp(event.timestamp)
                 event_in = event_at - datetime.now()
 
@@ -208,7 +209,23 @@ class Klaimera(discord.Client):
     async def command_notify(
         self, args: Optional[str], message: discord.Message
     ) -> int:
-        return 2
+        if args and len(sargs := args.split(" ", 1)) >= 1:
+            if sargs[0] == "alert":
+                return await kutils.alert()
+
+            elif sargs[0] == "push":
+                if len(sargs) > 1:
+                    pmesg = sargs[1]
+                else:
+                    pmesg = "Test!"
+
+                return await kutils.notify(pmesg)
+
+            else:
+                return 1
+
+        else:
+            return 1
 
     async def command_exec(self, message: discord.Message) -> int:
         # Return Codes:
@@ -309,7 +326,7 @@ class Klaimera(discord.Client):
             await sleep(uniform(wait_min, wait_max))
             await message.add_reaction("🍞")
             await logger.info(f"Waifu/Claim - {series}: {embed.author.name} [{kakera}]")
-        
+
         else:
             await logger.info(f"Waifu/Roll - {series}: {embed.author.name} [{kakera}]")
 

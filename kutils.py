@@ -1,10 +1,14 @@
+from typing import Any, Awaitable, Callable, Optional, Union
+from pathlib import Path
 import functools
 import asyncio
 
-from pathlib import Path
-from typing import Any, Awaitable, Callable, Optional, Union
 from tomlkit import dumps, loads, items
+from playsound import playsound  # type: ignore
+from notify_run import Notify  # type: ignore
 from aiofiles import open
+
+notify_run = Notify()
 
 
 def rie(func: Callable) -> Callable:
@@ -17,9 +21,31 @@ def rie(func: Callable) -> Callable:
     return wrapper
 
 
-def task(coro: Awaitable) -> asyncio.Task:
-    loop = asyncio.get_event_loop()
-    return loop.create_task(coro)
+async def alert() -> int:
+    try:
+        if (audio_path := Path(__file__).parent.joinpath("alert.wav")).exists():
+            playsound(str(audio_path), block=False)
+
+    except Exception:
+        # TODO: Log here
+        return 0
+
+    else:
+        return 2
+
+
+async def notify(message: str):
+    @rie
+    def _internal(message: str):
+        notify_run.send(message)
+
+    try:
+        await _internal(message)
+        return 0
+
+    except Exception:
+        # TODO: Log here
+        return 2
 
 
 class Validator:
