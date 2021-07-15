@@ -1,9 +1,11 @@
 # klaimera
 
-Automatic claimer and roller for Mudae, version `0.0.0`.
+Automatic claimer and roller for Mudae, version `0.0.1`.
 
-**WARNING: The current version is primitive and is very volatile stability wise.**
-**Do not use it unless you _know_ what you are doing.**
+> **WARNING: The current version is primitive and is very volatile in terms of stability.**
+> **Do not use it unless you _know_ what you are doing. Self-bots are against Discord's**
+> **Terms of Service and I am in no way liable for what may be taken upon your account.**
+> **_Use this at your own precaution._**
 
 These are neccesary before Klaimera can be bumped to `0.1.0`.
 

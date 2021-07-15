@@ -1,11 +1,17 @@
 [user]
-# token  : A Discord user token
-# notify : Enable notification using the notify_run push notification service
-# sound  : Enable audio alerts using the playsound2 PyPi package, requires an audio file
-#          where the klaimera.py file is.
+# token     : A Discord user token
+# notify    : Enable notification using the notify_run push notification service
+# sound     : Enable audio alerts using the playsound2 PyPi package, requires an audio file
+#             where the klaimera.py file is.
+# log       : Log to a file named by the timestamp of Klaimera's start.
+# log_level : Log level, from 0-5: DEBUG, INFO, WAIFU, ERROR, WARN, FATAL
+# log_max   : How many logs to be kept retrievable on demand.
 token  = ""
 notify = true
 sound  = false
+log       = true
+log_max   = 100
+log_level = 0
 
 [commands]
 # enable       : Enable commands. If switched off, config.toml has to be manually
@@ -46,6 +52,7 @@ warnMessage  = [
 auto    = true
 command = "$wa"
 delay   = [0.5, 1.0]
+wpm     = [72, 96]
 
 [dispatch.claim]
 # automate  : Enable automatic claiming

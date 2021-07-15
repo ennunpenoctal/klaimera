@@ -1,4 +1,4 @@
-from typing import Any, Awaitable, Callable, Optional, Union
+from typing import Any, Awaitable, Callable, Optional, Tuple, Union
 from pathlib import Path
 import functools
 import asyncio
@@ -8,7 +8,10 @@ from playsound import playsound  # type: ignore
 from notify_run import Notify  # type: ignore
 from aiofiles import open
 
+from klogging import Logger
+
 notify_run = Notify()
+logger: Optional[Logger] = None
 
 
 def rie(func: Callable) -> Callable:
@@ -26,8 +29,10 @@ async def alert() -> int:
         if (audio_path := Path(__file__).parent.joinpath("alert.wav")).exists():
             playsound(str(audio_path), block=False)
 
-    except Exception:
-        # TODO: Log here
+    except Exception as exc:
+        if logger:
+            await logger.warn("Error playing audio", exc=exc)
+
         return 0
 
     else:
@@ -43,8 +48,10 @@ async def notify(message: str):
         await _internal(message)
         return 0
 
-    except Exception:
-        # TODO: Log here
+    except Exception as exc:
+        if logger:
+            await logger.warn("Error sending push notification", exc=exc)
+
         return 2
 
 
@@ -84,16 +91,31 @@ class Validator:
             raise TypeError("Not an array")
 
     @staticmethod
-    def int_array(array: Any) -> None:
+    def int_array(
+        array: Any, length: Optional[int] = None, required: bool = False
+    ) -> None:
         if isinstance(array, items.Array):
-            check = [isinstance(item, items.Integer) for item in array]
-            bool_check = [isinstance(item, bool) for item in array]
+            if len(array) > 0:
+                check = [isinstance(item, items.Integer) for item in array]
+                bool_check = [isinstance(item, bool) for item in array]
+            
+                if not (all(check) and not any(bool_check)):
+                    if False in check:
+                        fault_index = check.index(False)
+                    else:
+                        fault_index = bool_check.index(True)
+            
+                    raise ValueError(
+                        f"Non-integer at index {fault_index} ({array[fault_index]})"
+                    )
+                
+                elif length and len(array) != length:
+                    raise ValueError(f"Expected int array of length {length}, got {len(array)}")
 
-            if not (all(check) and not all(bool_check)):
-                fault_index = check.index(False)
-                raise ValueError(
-                    f"Non-integer at index {fault_index} ({array[fault_index]})"
-                )
+            else:
+                if required:
+                    raise ValueError("Values are required")
+
 
         else:
             raise TypeError("Not an array")
@@ -106,9 +128,12 @@ class Validator:
             raise TypeError("Not a bool")
 
     @staticmethod
-    def int(item: Any) -> None:
+    def int(item: Any, range: Optional[Tuple[int, int]] = None) -> None:
         if not isinstance(item, items.Integer):
             raise TypeError("Not an integer")
+
+        elif range and not (range[0] <= item <= range[1]):
+            raise ValueError(f"Not in range of {range[0]},{range[1]} ({item})")
 
     @staticmethod
     def str(item: Any) -> None:
@@ -130,6 +155,9 @@ class Config:
         "user.token",
         "user.notify",
         "user.sound",
+        "user.log",
+        "user.log_max",
+        "user.log_level",
         "commands.enable",
         "commands.status",
         "commands.statusPublic",
@@ -145,6 +173,7 @@ class Config:
         "dispatch.roll.auto",
         "dispatch.roll.command",
         "dispatch.roll.delay",
+        "dispatch.roll.wpm",
         "dispatch.claim.auto",
         "target.roll.kakera",
         "target.roll.delay",
@@ -208,6 +237,9 @@ class Config:
         await verify("user.token", Validator.str)
         await verify("user.notify", Validator.bool)
         await verify("user.sound", Validator.bool)
+        await verify("user.log", Validator.bool)
+        await verify("user.log_max", Validator.int)
+        await verify("user.log_level", Validator.int, range=(0, 5))
 
         await verify("commands.enable", Validator.bool)
         await verify("commands.status", Validator.bool)
@@ -230,6 +262,7 @@ class Config:
         await verify("dispatch.roll.auto", Validator.bool)
         await verify("dispatch.roll.command", Validator.str)
         await verify("dispatch.roll.delay", Validator.float_array)
+        await verify("dispatch.roll.wpm", Validator.int_array, length=2, required=True)
 
         await verify("dispatch.claim.auto", Validator.bool)
 

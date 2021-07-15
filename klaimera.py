@@ -15,9 +15,8 @@ import klogging
 import kutils
 
 MUDAE_AID = 432610292342587392
-KLAIMERA_START = time()
 aeval = asteval.Interpreter()
-logger = klogging
+logger = klogging.Logger()
 
 
 class EventType(Enum):
@@ -139,7 +138,7 @@ class EventManager:
         else:
             recur_info = "."
 
-        logger.info(f"Dispatched {type} for {time_info}{recur_info}")
+        await logger.info(f"Dispatched {type} for {time_info}{recur_info}")
 
         insort(
             self.events,
@@ -269,6 +268,10 @@ class Klaimera(discord.Client):
         )
 
     async def bootstrap(self):
+        # Logger Installation
+        kutils.logger = logger
+
+        # Event Manager
         self.eventmgr = EventManager()
         await self.eventmgr.benchmark()
         await logger.info(
@@ -278,10 +281,12 @@ class Klaimera(discord.Client):
         loop = get_event_loop()
         loop.create_task(self.eventmgr.dispatcher())
 
+        # Configuration
         self.config = kutils.Config()
         await self.config.init()
         await self.config.load()
 
+        # Events
         await self.eventmgr.dispatch(
             type=EventType.CONFIG_RELOAD,
             call=self.event_reloader,
@@ -325,10 +330,9 @@ class Klaimera(discord.Client):
             wait_min, wait_max = await self.config.get("target.roll.delay")  # type: ignore
             await sleep(uniform(wait_min, wait_max))
             await message.add_reaction("🍞")
-            await logger.info(f"Waifu/Claim - {series}: {embed.author.name} [{kakera}]")
 
         else:
-            await logger.info(f"Waifu/Roll - {series}: {embed.author.name} [{kakera}]")
+            await logger.waifu(f"Rolled:\n{embed.author.name} ({kakera})\n{series}")
 
     async def parse(self, message: discord.Message):
         if (
@@ -352,6 +356,28 @@ class Klaimera(discord.Client):
             )
         ):
             await self.roll_parse(message)
+
+        elif "are now married!" in message.content:
+            await self.claim_parse(message)
+
+    async def claim_parse(self, message: discord.Message):
+        bride = message.content.split("**")[3]
+
+        if bride in self.config.get("target.roll.character"):  # type: ignore
+            targeted = True
+
+        else:
+            targeted = False
+
+        if message.content.split("**")[1] == self.user.name:
+            await logger.waifu(mesg := f"Claimed {bride}!")
+            await kutils.alert()
+            await kutils.notify(mesg)
+
+        elif targeted:
+            await logger.waifu(mesg := f"Stolen: {bride}")
+            await kutils.alert()
+            await kutils.notify(mesg)
 
     async def on_ready(self):
         await logger.info(f"Ready as {self.user}.")
@@ -385,14 +411,14 @@ class Klaimera(discord.Client):
 async def main():
     kmra = Klaimera()
 
-    print("Klaimera v0.1.0\n")
+    print("Klaimera version 0.0.1\n")
 
     try:
         await kmra.bootstrap()
-        await kmra.start(str(await kmra.config.get("user.token")))
+        await kmra.start(await kmra.config.get("user.token"))  # type: ignore
 
     except Exception as exc:
-        logger.fatal("Error initalising the bot", exc=exc)
+        await logger.fatal("Error initalising the bot", exc=exc)
 
     else:
         await kmra.config.file.close()

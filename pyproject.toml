@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "klaimera"
-version = "0.0.0"
+version = "0.0.1"
 description = "Automatic claimer and roller for Mudae."
 authors = ["ennunpenoctal <ennunpenoctal@protonmail.com>"]
 
