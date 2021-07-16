@@ -332,7 +332,7 @@ class Klaimera(discord.Client):
             await message.add_reaction("🍞")
 
         else:
-            await logger.waifu(f"Rolled:\n{embed.author.name} ({kakera})\n{series}")
+            await logger.waifu(f"Rolled {embed.author.name} <{series}> [{kakera}]")
 
     async def parse(self, message: discord.Message):
         if (

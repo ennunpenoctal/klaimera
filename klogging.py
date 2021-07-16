@@ -76,7 +76,7 @@ class Logger:
         self.log_history.append(mesg)
 
         if _text:
-            padding = len(header)
+            padding = " " * (len(header) + 1)
 
             for line in _text[1:]:
                 print(f"{padding}{line}")
